@@ -5,15 +5,14 @@ import {
     StyleSheet,
     ScrollView,
     Alert,
-    Linking,
-    Platform,
+    TouchableOpacity,
 } from 'react-native';
-import { GradientView } from '../../components/common';
 import { Ionicons } from '@expo/vector-icons';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { Button, Card, Header, Input } from '../../components/common';
+import * as Haptics from 'expo-haptics';
+import { Button, AnimatedCard, Input, AnimatedStatusDot } from '../../components/common';
 import { useAppContext } from '../../contexts/AppContext';
-import { colors, gradients } from '../../styles/colors';
+import { colors } from '../../styles/colors';
 import { fontSize, fontWeight, spacing, borderRadius } from '../../styles/theme';
 import { getNetworkInfo, updateConfiguration, getSignalStrength } from '../../services/api';
 import { NetworkInfo } from '../../types';
@@ -42,9 +41,11 @@ export function DeviceSettingsScreen({ navigation }: DeviceSettingsScreenProps) 
     };
 
     const handleSave = async () => {
+        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
         setSaving(true);
         try {
             await updateConfiguration({ deviceName });
+            Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
             Alert.alert('Sucesso', 'Nome do dispositivo atualizado!');
         } catch (error) {
             Alert.alert('Erro', 'Não foi possível salvar as configurações.');
@@ -75,21 +76,69 @@ export function DeviceSettingsScreen({ navigation }: DeviceSettingsScreenProps) 
 
     const signal = networkInfo?.rssi ? getSignalStrength(networkInfo.rssi) : null;
 
+    const InfoRow = ({ icon, label, value, valueColor }: {
+        icon: string;
+        label: string;
+        value: string;
+        valueColor?: string;
+    }) => (
+        <View style={styles.infoRow}>
+            <View style={styles.infoIconCircle}>
+                <Ionicons name={icon as any} size={18} color={colors.textMuted} />
+            </View>
+            <View style={styles.infoContent}>
+                <Text style={styles.infoLabel}>{label}</Text>
+                <Text style={[styles.infoValue, valueColor && { color: valueColor }]}>{value}</Text>
+            </View>
+        </View>
+    );
+
     return (
         <View style={styles.container}>
-            <Header
-                title="Configurações do Dispositivo"
-                showBack
-                onBack={() => navigation.goBack()}
-            />
+            {/* Custom Header */}
+            <View style={styles.headerContainer}>
+                <TouchableOpacity
+                    style={styles.backButton}
+                    onPress={() => navigation.goBack()}
+                >
+                    <Ionicons name="arrow-back" size={24} color={colors.text} />
+                </TouchableOpacity>
+                <View style={styles.headerTitleContainer}>
+                    <Text style={styles.headerLabel}>CONFIGURAÇÕES</Text>
+                    <Text style={styles.headerTitle}>Dispositivo</Text>
+                </View>
+            </View>
 
             <ScrollView
                 contentContainerStyle={styles.content}
                 showsVerticalScrollIndicator={false}
             >
+                {/* Device Status Card */}
+                <AnimatedCard style={styles.statusCard} delay={50}>
+                    <View style={styles.statusHeader}>
+                        <View style={styles.deviceIconCircle}>
+                            <Ionicons name="hardware-chip-outline" size={28} color={colors.primary} />
+                        </View>
+                        <View style={styles.statusInfo}>
+                            <Text style={styles.deviceId}>
+                                {deviceStatus?.deviceId || 'ESP32-AquaFeeder'}
+                            </Text>
+                            <View style={styles.connectionBadge}>
+                                <AnimatedStatusDot isOnline={!!networkInfo?.connected} size={6} />
+                                <Text style={styles.connectionText}>
+                                    {networkInfo?.connected ? 'Conectado' : 'Desconectado'}
+                                </Text>
+                            </View>
+                        </View>
+                    </View>
+                </AnimatedCard>
+
                 {/* Device Name */}
-                <Card style={styles.section}>
-                    <Text style={styles.sectionTitle}>Nome do Dispositivo</Text>
+                <AnimatedCard style={styles.section} delay={100}>
+                    <View style={styles.sectionHeader}>
+                        <Ionicons name="create-outline" size={20} color={colors.primary} />
+                        <Text style={styles.sectionTitle}>Nome do Dispositivo</Text>
+                    </View>
                     <Input
                         value={deviceName}
                         onChangeText={setDeviceName}
@@ -101,70 +150,69 @@ export function DeviceSettingsScreen({ navigation }: DeviceSettingsScreenProps) 
                         loading={saving}
                         fullWidth
                     />
-                </Card>
+                </AnimatedCard>
 
                 {/* Network Info */}
-                <Card style={styles.section}>
-                    <Text style={styles.sectionTitle}>Conexão de Rede</Text>
-
-                    <View style={styles.infoRow}>
-                        <Ionicons name="wifi" size={20} color={colors.primary} />
-                        <Text style={styles.infoLabel}>Rede WiFi:</Text>
-                        <Text style={styles.infoValue}>
-                            {networkInfo?.ssid || deviceStatus?.ip || 'Desconhecido'}
-                        </Text>
+                <AnimatedCard style={styles.section} delay={150}>
+                    <View style={styles.sectionHeader}>
+                        <Ionicons name="wifi-outline" size={20} color={colors.primary} />
+                        <Text style={styles.sectionTitle}>Conexão de Rede</Text>
                     </View>
 
-                    <View style={styles.infoRow}>
-                        <Ionicons name="globe" size={20} color={colors.primary} />
-                        <Text style={styles.infoLabel}>Endereço IP:</Text>
-                        <Text style={styles.infoValue}>
-                            {networkInfo?.ip || deviceStatus?.ip || 'Desconhecido'}
-                        </Text>
-                    </View>
-
-                    <View style={styles.infoRow}>
-                        <Ionicons name="link" size={20} color={colors.primary} />
-                        <Text style={styles.infoLabel}>Hostname:</Text>
-                        <Text style={styles.infoValue}>
-                            {networkInfo?.hostname || 'alimentador.local'}
-                        </Text>
-                    </View>
-
+                    <InfoRow
+                        icon="wifi"
+                        label="Rede WiFi"
+                        value={networkInfo?.ssid || 'Desconhecido'}
+                    />
+                    <InfoRow
+                        icon="globe-outline"
+                        label="Endereço IP"
+                        value={networkInfo?.ip || deviceStatus?.ip || 'Desconhecido'}
+                    />
+                    <InfoRow
+                        icon="link-outline"
+                        label="Hostname"
+                        value={networkInfo?.hostname || 'alimentador.local'}
+                    />
                     {signal && (
-                        <View style={styles.infoRow}>
-                            <Ionicons name="cellular" size={20} color={signal.color} />
-                            <Text style={styles.infoLabel}>Sinal:</Text>
-                            <Text style={[styles.infoValue, { color: signal.color }]}>
-                                {signal.label} ({networkInfo?.rssi} dBm)
-                            </Text>
-                        </View>
-                    )}
-
-                    <View style={styles.infoRow}>
-                        <Ionicons
-                            name={networkInfo?.connected ? 'checkmark-circle' : 'close-circle'}
-                            size={20}
-                            color={networkInfo?.connected ? colors.success : colors.danger}
+                        <InfoRow
+                            icon="cellular-outline"
+                            label="Intensidade"
+                            value={`${signal.label} (${networkInfo?.rssi} dBm)`}
+                            valueColor={signal.color}
                         />
-                        <Text style={styles.infoLabel}>Status:</Text>
-                        <Text
-                            style={[
-                                styles.infoValue,
-                                { color: networkInfo?.connected ? colors.success : colors.danger },
-                            ]}
-                        >
-                            {networkInfo?.connected ? 'Conectado' : 'Desconectado'}
-                        </Text>
+                    )}
+                </AnimatedCard>
+
+                {/* Device Info */}
+                <AnimatedCard style={styles.section} delay={200}>
+                    <View style={styles.sectionHeader}>
+                        <Ionicons name="information-circle-outline" size={20} color={colors.primary} />
+                        <Text style={styles.sectionTitle}>Informações</Text>
                     </View>
-                </Card>
+
+                    <InfoRow
+                        icon="time-outline"
+                        label="Hora do Dispositivo"
+                        value={deviceStatus?.horaAtual || '--:--:--'}
+                    />
+                    <InfoRow
+                        icon="calendar-outline"
+                        label="Agendamentos"
+                        value={`${deviceStatus?.totalAgendamentos || 0} / ${deviceStatus?.maxAgendamentos || 10}`}
+                    />
+                </AnimatedCard>
 
                 {/* WiFi Reconfigure */}
-                <Card style={styles.section}>
-                    <Text style={styles.sectionTitle}>Alterar Rede WiFi</Text>
+                <AnimatedCard style={styles.dangerSection} delay={250}>
+                    <View style={styles.sectionHeader}>
+                        <Ionicons name="refresh-outline" size={20} color={colors.warning} />
+                        <Text style={[styles.sectionTitle, { color: colors.warning }]}>
+                            Alterar Rede WiFi
+                        </Text>
+                    </View>
                     <Text style={styles.sectionDescription}>
-                        Para conectar o alimentador a uma rede WiFi diferente, você precisará
-                        reconfigurar o dispositivo.
+                        Para conectar a uma rede diferente, você precisará reconfigurar o dispositivo.
                     </Text>
                     <Button
                         title="Reconfigurar WiFi"
@@ -173,36 +221,7 @@ export function DeviceSettingsScreen({ navigation }: DeviceSettingsScreenProps) 
                         fullWidth
                         icon={<Ionicons name="wifi" size={18} color={colors.primary} />}
                     />
-                </Card>
-
-                {/* Device Info */}
-                <Card style={styles.section}>
-                    <Text style={styles.sectionTitle}>Informações do Dispositivo</Text>
-
-                    <View style={styles.infoRow}>
-                        <Ionicons name="hardware-chip" size={20} color={colors.textMuted} />
-                        <Text style={styles.infoLabel}>ID:</Text>
-                        <Text style={styles.infoValue}>
-                            {deviceStatus?.deviceId || 'ESP32-AquaFeeder'}
-                        </Text>
-                    </View>
-
-                    <View style={styles.infoRow}>
-                        <Ionicons name="time" size={20} color={colors.textMuted} />
-                        <Text style={styles.infoLabel}>Hora:</Text>
-                        <Text style={styles.infoValue}>
-                            {deviceStatus?.horaAtual || '--:--:--'}
-                        </Text>
-                    </View>
-
-                    <View style={styles.infoRow}>
-                        <Ionicons name="calendar" size={20} color={colors.textMuted} />
-                        <Text style={styles.infoLabel}>Agendamentos:</Text>
-                        <Text style={styles.infoValue}>
-                            {deviceStatus?.totalAgendamentos || 0} / {deviceStatus?.maxAgendamentos || 10}
-                        </Text>
-                    </View>
-                </Card>
+                </AnimatedCard>
             </ScrollView>
         </View>
     );
@@ -211,26 +230,100 @@ export function DeviceSettingsScreen({ navigation }: DeviceSettingsScreenProps) 
 const styles = StyleSheet.create({
     container: {
         flex: 1,
+        backgroundColor: colors.background,
+    },
+    headerContainer: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        paddingHorizontal: spacing.lg,
+        paddingTop: spacing.xxl + spacing.lg,
+        paddingBottom: spacing.md,
+    },
+    backButton: {
+        width: 44,
+        height: 44,
+        borderRadius: 22,
+        backgroundColor: colors.surface,
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
+    headerTitleContainer: {
+        marginLeft: spacing.md,
+    },
+    headerLabel: {
+        fontSize: fontSize.xs,
+        color: colors.primary,
+        letterSpacing: 2,
+        fontWeight: fontWeight.semibold,
+    },
+    headerTitle: {
+        fontSize: fontSize.xxl,
+        fontWeight: fontWeight.bold,
+        color: colors.text,
     },
     content: {
         padding: spacing.lg,
-        gap: spacing.lg,
+        gap: spacing.md,
         paddingBottom: spacing.xxl,
+    },
+    statusCard: {
+        marginBottom: spacing.sm,
+    },
+    statusHeader: {
+        flexDirection: 'row',
+        alignItems: 'center',
+    },
+    deviceIconCircle: {
+        width: 56,
+        height: 56,
+        borderRadius: 28,
+        backgroundColor: colors.primary + '15',
+        justifyContent: 'center',
+        alignItems: 'center',
+        marginRight: spacing.md,
+    },
+    statusInfo: {
+        flex: 1,
+    },
+    deviceId: {
+        fontSize: fontSize.lg,
+        fontWeight: fontWeight.bold,
+        color: colors.text,
+    },
+    connectionBadge: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        marginTop: spacing.xs,
+    },
+    connectionText: {
+        fontSize: fontSize.sm,
+        color: colors.textMuted,
+        marginLeft: spacing.sm,
     },
     section: {
         padding: spacing.lg,
+    },
+    sectionHeader: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        marginBottom: spacing.md,
     },
     sectionTitle: {
         fontSize: fontSize.lg,
         fontWeight: fontWeight.semibold,
         color: colors.text,
-        marginBottom: spacing.md,
+        marginLeft: spacing.sm,
     },
     sectionDescription: {
         fontSize: fontSize.sm,
         color: colors.textMuted,
         marginBottom: spacing.md,
         lineHeight: 20,
+    },
+    dangerSection: {
+        padding: spacing.lg,
+        borderWidth: 1,
+        borderColor: colors.warning + '30',
     },
     infoRow: {
         flexDirection: 'row',
@@ -239,16 +332,28 @@ const styles = StyleSheet.create({
         borderBottomWidth: 1,
         borderBottomColor: colors.glassBorder,
     },
+    infoIconCircle: {
+        width: 36,
+        height: 36,
+        borderRadius: 18,
+        backgroundColor: colors.surfaceLight,
+        justifyContent: 'center',
+        alignItems: 'center',
+        marginRight: spacing.md,
+    },
+    infoContent: {
+        flex: 1,
+    },
     infoLabel: {
-        fontSize: fontSize.sm,
-        color: colors.textSecondary,
-        marginLeft: spacing.sm,
-        width: 100,
+        fontSize: fontSize.xs,
+        color: colors.textMuted,
+        textTransform: 'uppercase',
+        letterSpacing: 0.5,
     },
     infoValue: {
-        fontSize: fontSize.sm,
+        fontSize: fontSize.md,
         fontWeight: fontWeight.medium,
         color: colors.text,
-        flex: 1,
+        marginTop: 2,
     },
 });

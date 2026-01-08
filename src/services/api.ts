@@ -46,7 +46,8 @@ async function fetchWithTimeout(
  */
 export async function scanWiFiNetworks(): Promise<WiFiNetwork[]> {
     try {
-        const response = await fetchWithTimeout(`${AP_MODE_URL}/scan-wifi`);
+        // Increased timeout for WiFi scanning - ESP32 may take longer
+        const response = await fetchWithTimeout(`${AP_MODE_URL}/scan-wifi`, {}, 30000);
         const data = await response.json();
         const networks = data.redes || [];
         return networks.map((n: any) => ({

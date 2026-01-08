@@ -5,7 +5,6 @@ import {
     StyleSheet,
     FlatList,
     TouchableOpacity,
-    Modal,
     Switch,
     Alert,
     TextInput,
@@ -13,9 +12,9 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import * as Haptics from 'expo-haptics';
-import { Button, Card, Header } from '../../components/common';
+import { Button, AnimatedCard, AnimatedModal } from '../../components/common';
 import { colors } from '../../styles/colors';
-import { fontSize, fontWeight, spacing, borderRadius, shadows } from '../../styles/theme';
+import { fontSize, fontWeight, spacing, borderRadius } from '../../styles/theme';
 import { getSchedules, addSchedule, updateSchedule, deleteSchedule, formatTime } from '../../services/api';
 import { Schedule, RefillType } from '../../types';
 
@@ -99,6 +98,7 @@ export function ScheduleManagementScreen({ navigation }: ScheduleManagementScree
 
             setModalVisible(false);
             loadSchedules();
+            Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
             Alert.alert('Sucesso', editingSchedule ? 'Agendamento atualizado!' : 'Agendamento criado!');
         } catch (error) {
             Alert.alert('Erro', 'Não foi possível salvar o agendamento.');
@@ -140,65 +140,105 @@ export function ScheduleManagementScreen({ navigation }: ScheduleManagementScree
 
     const getRefillLabel = (refill: RefillType) => {
         switch (refill) {
-            case 'refill1': return 'Esquerdo';
-            case 'refill2': return 'Direito';
+            case 'refill1': return 'Esq';
+            case 'refill2': return 'Dir';
             case 'ambos': return 'Ambos';
         }
     };
 
-    const renderSchedule = ({ item }: { item: Schedule }) => (
-        <Card style={styles.scheduleCard}>
-            <TouchableOpacity
-                style={styles.scheduleContent}
-                onPress={() => openEditModal(item)}
-                activeOpacity={0.7}
-            >
-                <View style={styles.scheduleInfo}>
+    const getRefillColor = (refill: RefillType) => {
+        switch (refill) {
+            case 'refill1': return colors.primary;
+            case 'refill2': return colors.secondary;
+            case 'ambos': return colors.accent;
+        }
+    };
+
+    const renderSchedule = ({ item, index }: { item: Schedule; index: number }) => (
+        <AnimatedCard
+            style={styles.scheduleCard}
+            delay={index * 50}
+            onPress={() => openEditModal(item)}
+        >
+            <View style={styles.scheduleMain}>
+                <View style={[styles.timeCircle, !item.ativo && styles.timeCircleInactive]}>
                     <Text style={[styles.scheduleTime, !item.ativo && styles.inactive]}>
                         {formatTime(item.hora, item.minuto)}
                     </Text>
-                    <Text style={[styles.scheduleRefill, !item.ativo && styles.inactive]}>
-                        {getRefillLabel(item.refill)}
+                </View>
+                <View style={styles.scheduleInfo}>
+                    <View style={[styles.refillBadge, { backgroundColor: getRefillColor(item.refill) + '20' }]}>
+                        <Text style={[styles.refillBadgeText, { color: getRefillColor(item.refill) }]}>
+                            {getRefillLabel(item.refill)}
+                        </Text>
+                    </View>
+                    <Text style={styles.scheduleStatus}>
+                        {item.ativo ? 'Ativo' : 'Inativo'}
                     </Text>
                 </View>
-                <View style={styles.scheduleActions}>
-                    <Switch
-                        value={item.ativo}
-                        onValueChange={() => handleToggle(item)}
-                        trackColor={{ false: colors.surfaceLight, true: colors.primary + '50' }}
-                        thumbColor={item.ativo ? colors.primary : colors.textMuted}
-                    />
-                    <TouchableOpacity
-                        onPress={() => handleDelete(item)}
-                        style={styles.deleteButton}
-                    >
-                        <Ionicons name="trash-outline" size={20} color={colors.danger} />
-                    </TouchableOpacity>
-                </View>
-            </TouchableOpacity>
-        </Card>
+            </View>
+            <View style={styles.scheduleActions}>
+                <Switch
+                    value={item.ativo}
+                    onValueChange={() => handleToggle(item)}
+                    trackColor={{ false: colors.surfaceLight, true: colors.primary + '50' }}
+                    thumbColor={item.ativo ? colors.primary : colors.textMuted}
+                />
+                <TouchableOpacity
+                    onPress={() => handleDelete(item)}
+                    style={styles.deleteButton}
+                >
+                    <Ionicons name="trash-outline" size={18} color={colors.danger} />
+                </TouchableOpacity>
+            </View>
+        </AnimatedCard>
     );
 
     return (
         <View style={styles.container}>
-            <Header
-                title="Agendamentos"
-                subtitle={`${schedules.length} configurados`}
-                showBack
-                onBack={() => navigation.goBack()}
-                rightAction={
-                    <TouchableOpacity onPress={openAddModal}>
-                        <Ionicons name="add-circle" size={28} color={colors.primary} />
-                    </TouchableOpacity>
-                }
-            />
+            {/* Custom Header */}
+            <View style={styles.headerContainer}>
+                <TouchableOpacity
+                    style={styles.backButton}
+                    onPress={() => navigation.goBack()}
+                >
+                    <Ionicons name="arrow-back" size={24} color={colors.text} />
+                </TouchableOpacity>
+                <View style={styles.headerTitleContainer}>
+                    <Text style={styles.headerLabel}>GERENCIAR</Text>
+                    <Text style={styles.headerTitle}>Agendamentos</Text>
+                </View>
+                <TouchableOpacity
+                    style={styles.addButton}
+                    onPress={openAddModal}
+                >
+                    <Ionicons name="add" size={24} color={colors.text} />
+                </TouchableOpacity>
+            </View>
+
+            {/* Stats */}
+            <View style={styles.statsRow}>
+                <View style={styles.statItem}>
+                    <Text style={styles.statValue}>{schedules.length}</Text>
+                    <Text style={styles.statLabel}>Total</Text>
+                </View>
+                <View style={styles.statDivider} />
+                <View style={styles.statItem}>
+                    <Text style={[styles.statValue, { color: colors.success }]}>
+                        {schedules.filter(s => s.ativo).length}
+                    </Text>
+                    <Text style={styles.statLabel}>Ativos</Text>
+                </View>
+            </View>
 
             {schedules.length === 0 ? (
                 <View style={styles.emptyContainer}>
-                    <Ionicons name="calendar-outline" size={64} color={colors.textMuted} />
+                    <View style={styles.emptyIconCircle}>
+                        <Ionicons name="calendar-outline" size={48} color={colors.textMuted} />
+                    </View>
                     <Text style={styles.emptyText}>Nenhum agendamento</Text>
                     <Text style={styles.emptySubtext}>
-                        Toque no + para adicionar um agendamento
+                        Toque no + para adicionar
                     </Text>
                 </View>
             ) : (
@@ -212,95 +252,85 @@ export function ScheduleManagementScreen({ navigation }: ScheduleManagementScree
             )}
 
             {/* Add/Edit Modal */}
-            <Modal
+            <AnimatedModal
                 visible={modalVisible}
-                transparent
-                animationType="slide"
-                onRequestClose={() => setModalVisible(false)}
+                onClose={() => setModalVisible(false)}
+                title={editingSchedule ? 'Editar' : 'Novo Agendamento'}
             >
-                <View style={styles.modalOverlay}>
-                    <View style={styles.modalContent}>
-                        <View style={styles.modalHeader}>
-                            <View style={styles.modalHandle} />
-                        </View>
-
-                        <Text style={styles.modalTitle}>
-                            {editingSchedule ? 'Editar Agendamento' : 'Novo Agendamento'}
-                        </Text>
-
-                        <Text style={styles.fieldLabel}>Horário</Text>
-                        <View style={styles.timeInputRow}>
-                            <TextInput
-                                style={styles.timeInput}
-                                value={hour}
-                                onChangeText={(t) => setHour(t.replace(/[^0-9]/g, '').slice(0, 2))}
-                                keyboardType="number-pad"
-                                maxLength={2}
-                                placeholder="08"
-                                placeholderTextColor={colors.textMuted}
-                            />
-                            <Text style={styles.timeSeparator}>:</Text>
-                            <TextInput
-                                style={styles.timeInput}
-                                value={minute}
-                                onChangeText={(t) => setMinute(t.replace(/[^0-9]/g, '').slice(0, 2))}
-                                keyboardType="number-pad"
-                                maxLength={2}
-                                placeholder="00"
-                                placeholderTextColor={colors.textMuted}
-                            />
-                        </View>
-
-                        <Text style={styles.fieldLabel}>Refil</Text>
-                        <View style={styles.refillOptions}>
-                            {(['ambos', 'refill1', 'refill2'] as RefillType[]).map((refill) => (
-                                <TouchableOpacity
-                                    key={refill}
-                                    style={[
-                                        styles.refillOption,
-                                        selectedRefill === refill && styles.refillOptionActive,
-                                    ]}
-                                    onPress={() => setSelectedRefill(refill)}
-                                >
-                                    <Text
-                                        style={[
-                                            styles.refillOptionText,
-                                            selectedRefill === refill && styles.refillOptionTextActive,
-                                        ]}
-                                    >
-                                        {getRefillLabel(refill)}
-                                    </Text>
-                                </TouchableOpacity>
-                            ))}
-                        </View>
-
-                        <View style={styles.activeRow}>
-                            <Text style={styles.fieldLabel}>Ativo</Text>
-                            <Switch
-                                value={isActive}
-                                onValueChange={setIsActive}
-                                trackColor={{ false: colors.surfaceLight, true: colors.primary + '50' }}
-                                thumbColor={isActive ? colors.primary : colors.textMuted}
-                            />
-                        </View>
-
-                        <View style={styles.modalButtons}>
-                            <Button
-                                title="Cancelar"
-                                onPress={() => setModalVisible(false)}
-                                variant="ghost"
-                                style={styles.cancelButton}
-                            />
-                            <Button
-                                title={editingSchedule ? 'Salvar' : 'Adicionar'}
-                                onPress={handleSave}
-                                loading={saving}
-                                style={styles.saveButton}
-                            />
-                        </View>
-                    </View>
+                <Text style={styles.fieldLabel}>Horário</Text>
+                <View style={styles.timeInputRow}>
+                    <TextInput
+                        style={styles.timeInput}
+                        value={hour}
+                        onChangeText={(t) => setHour(t.replace(/[^0-9]/g, '').slice(0, 2))}
+                        keyboardType="number-pad"
+                        maxLength={2}
+                        placeholder="08"
+                        placeholderTextColor={colors.textMuted}
+                    />
+                    <Text style={styles.timeSeparator}>:</Text>
+                    <TextInput
+                        style={styles.timeInput}
+                        value={minute}
+                        onChangeText={(t) => setMinute(t.replace(/[^0-9]/g, '').slice(0, 2))}
+                        keyboardType="number-pad"
+                        maxLength={2}
+                        placeholder="00"
+                        placeholderTextColor={colors.textMuted}
+                    />
                 </View>
-            </Modal>
+
+                <Text style={styles.fieldLabel}>Refil</Text>
+                <View style={styles.refillOptions}>
+                    {(['ambos', 'refill1', 'refill2'] as RefillType[]).map((refill) => (
+                        <TouchableOpacity
+                            key={refill}
+                            style={[
+                                styles.refillOption,
+                                selectedRefill === refill && {
+                                    backgroundColor: getRefillColor(refill) + '20',
+                                    borderColor: getRefillColor(refill),
+                                },
+                            ]}
+                            onPress={() => setSelectedRefill(refill)}
+                        >
+                            <Text
+                                style={[
+                                    styles.refillOptionText,
+                                    selectedRefill === refill && { color: getRefillColor(refill) },
+                                ]}
+                            >
+                                {refill === 'ambos' ? 'Ambos' : refill === 'refill1' ? 'Esquerdo' : 'Direito'}
+                            </Text>
+                        </TouchableOpacity>
+                    ))}
+                </View>
+
+                <View style={styles.activeRow}>
+                    <Text style={styles.fieldLabel}>Ativo</Text>
+                    <Switch
+                        value={isActive}
+                        onValueChange={setIsActive}
+                        trackColor={{ false: colors.surfaceLight, true: colors.primary + '50' }}
+                        thumbColor={isActive ? colors.primary : colors.textMuted}
+                    />
+                </View>
+
+                <View style={styles.modalButtons}>
+                    <Button
+                        title="Cancelar"
+                        onPress={() => setModalVisible(false)}
+                        variant="ghost"
+                        style={styles.cancelButton}
+                    />
+                    <Button
+                        title={editingSchedule ? 'Salvar' : 'Criar'}
+                        onPress={handleSave}
+                        loading={saving}
+                        style={styles.saveButton}
+                    />
+                </View>
+            </AnimatedModal>
         </View>
     );
 }
@@ -310,40 +340,136 @@ const styles = StyleSheet.create({
         flex: 1,
         backgroundColor: colors.background,
     },
-    listContent: {
-        padding: spacing.lg,
-    },
-    scheduleCard: {
-        marginBottom: spacing.sm,
-    },
-    scheduleContent: {
+    headerContainer: {
         flexDirection: 'row',
-        justifyContent: 'space-between',
+        alignItems: 'center',
+        paddingHorizontal: spacing.lg,
+        paddingTop: spacing.xxl + spacing.lg,
+        paddingBottom: spacing.md,
+    },
+    backButton: {
+        width: 44,
+        height: 44,
+        borderRadius: 22,
+        backgroundColor: colors.surface,
+        justifyContent: 'center',
         alignItems: 'center',
     },
-    scheduleInfo: {
+    headerTitleContainer: {
         flex: 1,
+        marginLeft: spacing.md,
     },
-    scheduleTime: {
+    headerLabel: {
+        fontSize: fontSize.xs,
+        color: colors.primary,
+        letterSpacing: 2,
+        fontWeight: fontWeight.semibold,
+    },
+    headerTitle: {
         fontSize: fontSize.xl,
         fontWeight: fontWeight.bold,
         color: colors.text,
     },
-    scheduleRefill: {
-        fontSize: fontSize.sm,
-        color: colors.textSecondary,
-        marginTop: spacing.xs,
+    addButton: {
+        width: 44,
+        height: 44,
+        borderRadius: 22,
+        backgroundColor: colors.primary,
+        justifyContent: 'center',
+        alignItems: 'center',
     },
-    inactive: {
+    statsRow: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'center',
+        paddingVertical: spacing.md,
+        marginHorizontal: spacing.lg,
+        marginBottom: spacing.md,
+        backgroundColor: colors.surface,
+        borderRadius: borderRadius.lg,
+    },
+    statItem: {
+        alignItems: 'center',
+        paddingHorizontal: spacing.xl,
+    },
+    statValue: {
+        fontSize: fontSize.xxl,
+        fontWeight: fontWeight.bold,
+        color: colors.primary,
+    },
+    statLabel: {
+        fontSize: fontSize.xs,
+        color: colors.textMuted,
+    },
+    statDivider: {
+        width: 1,
+        height: 32,
+        backgroundColor: colors.glassBorder,
+    },
+    listContent: {
+        padding: spacing.lg,
+        gap: spacing.sm,
+    },
+    scheduleCard: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+    },
+    scheduleMain: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        flex: 1,
+    },
+    timeCircle: {
+        width: 72,
+        height: 48,
+        borderRadius: borderRadius.md,
+        backgroundColor: colors.primary + '15',
+        justifyContent: 'center',
+        alignItems: 'center',
+        marginRight: spacing.md,
+    },
+    timeCircleInactive: {
+        backgroundColor: colors.surfaceLight,
+    },
+    scheduleTime: {
+        fontSize: fontSize.lg,
+        fontWeight: fontWeight.bold,
+        color: colors.text,
+    },
+    scheduleInfo: {
+        flex: 1,
+    },
+    refillBadge: {
+        alignSelf: 'flex-start',
+        paddingHorizontal: spacing.sm,
+        paddingVertical: 2,
+        borderRadius: borderRadius.sm,
+        marginBottom: 4,
+    },
+    refillBadgeText: {
+        fontSize: fontSize.xs,
+        fontWeight: fontWeight.semibold,
+    },
+    scheduleStatus: {
+        fontSize: fontSize.xs,
         color: colors.textMuted,
     },
     scheduleActions: {
         flexDirection: 'row',
         alignItems: 'center',
-        gap: spacing.md,
+        gap: spacing.sm,
     },
     deleteButton: {
-        padding: spacing.sm,
+        width: 36,
+        height: 36,
+        borderRadius: 18,
+        backgroundColor: colors.danger + '15',
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
+    inactive: {
+        color: colors.textMuted,
     },
     emptyContainer: {
         flex: 1,
@@ -351,72 +477,51 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         padding: spacing.xl,
     },
+    emptyIconCircle: {
+        width: 100,
+        height: 100,
+        borderRadius: 50,
+        backgroundColor: colors.surface,
+        justifyContent: 'center',
+        alignItems: 'center',
+        marginBottom: spacing.lg,
+    },
     emptyText: {
         fontSize: fontSize.lg,
         fontWeight: fontWeight.semibold,
         color: colors.text,
-        marginTop: spacing.lg,
     },
     emptySubtext: {
         fontSize: fontSize.md,
         color: colors.textMuted,
-        textAlign: 'center',
         marginTop: spacing.sm,
     },
-    modalOverlay: {
-        flex: 1,
-        backgroundColor: colors.overlay,
-        justifyContent: 'flex-end',
-    },
-    modalContent: {
-        backgroundColor: colors.surface,
-        borderTopLeftRadius: borderRadius.xl,
-        borderTopRightRadius: borderRadius.xl,
-        padding: spacing.xl,
-        paddingTop: spacing.md,
-        ...shadows.lg,
-    },
-    modalHeader: {
-        alignItems: 'center',
-        marginBottom: spacing.lg,
-    },
-    modalHandle: {
-        width: 40,
-        height: 4,
-        backgroundColor: colors.textMuted,
-        borderRadius: 2,
-    },
-    modalTitle: {
-        fontSize: fontSize.xl,
-        fontWeight: fontWeight.bold,
-        color: colors.text,
-        marginBottom: spacing.lg,
-        textAlign: 'center',
-    },
     fieldLabel: {
-        fontSize: fontSize.md,
-        fontWeight: fontWeight.semibold,
-        color: colors.text,
+        fontSize: fontSize.sm,
+        fontWeight: fontWeight.medium,
+        color: colors.textSecondary,
         marginBottom: spacing.sm,
+        marginTop: spacing.md,
     },
     timeInputRow: {
         flexDirection: 'row',
         alignItems: 'center',
         justifyContent: 'center',
-        marginBottom: spacing.lg,
     },
     timeInput: {
         width: 80,
-        height: 60,
-        backgroundColor: colors.surfaceLight,
-        borderRadius: borderRadius.md,
-        textAlign: 'center',
-        fontSize: fontSize.xxl,
+        height: 64,
+        backgroundColor: colors.surface,
+        borderRadius: borderRadius.lg,
+        fontSize: fontSize.xxxl,
         fontWeight: fontWeight.bold,
         color: colors.text,
+        textAlign: 'center',
+        borderWidth: 1,
+        borderColor: colors.glassBorder,
     },
     timeSeparator: {
-        fontSize: fontSize.xxl,
+        fontSize: fontSize.xxxl,
         fontWeight: fontWeight.bold,
         color: colors.text,
         marginHorizontal: spacing.md,
@@ -424,43 +529,38 @@ const styles = StyleSheet.create({
     refillOptions: {
         flexDirection: 'row',
         gap: spacing.sm,
-        marginBottom: spacing.lg,
     },
     refillOption: {
         flex: 1,
         paddingVertical: spacing.md,
         borderRadius: borderRadius.md,
-        backgroundColor: colors.surfaceLight,
+        borderWidth: 1,
+        borderColor: colors.glassBorder,
         alignItems: 'center',
-        borderWidth: 2,
-        borderColor: 'transparent',
-    },
-    refillOptionActive: {
-        borderColor: colors.primary,
-        backgroundColor: colors.primary + '20',
     },
     refillOptionText: {
-        fontSize: fontSize.md,
+        fontSize: fontSize.sm,
         fontWeight: fontWeight.medium,
-        color: colors.textSecondary,
-    },
-    refillOptionTextActive: {
-        color: colors.primary,
+        color: colors.textMuted,
     },
     activeRow: {
         flexDirection: 'row',
         justifyContent: 'space-between',
         alignItems: 'center',
-        marginBottom: spacing.lg,
+        marginTop: spacing.lg,
+        paddingTop: spacing.md,
+        borderTopWidth: 1,
+        borderTopColor: colors.glassBorder,
     },
     modalButtons: {
         flexDirection: 'row',
         gap: spacing.md,
+        marginTop: spacing.xl,
     },
     cancelButton: {
         flex: 1,
     },
     saveButton: {
-        flex: 2,
+        flex: 1,
     },
 });

@@ -5,13 +5,12 @@ import {
     StyleSheet,
     FlatList,
     TouchableOpacity,
-    Modal,
     Alert,
     ActivityIndicator,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { Button, Card, Header, Input } from '../../components/common';
+import { Button, Card, Header, Input, AnimatedModal } from '../../components/common';
 import { useAppContext } from '../../contexts/AppContext';
 import { colors } from '../../styles/colors';
 import { fontSize, fontWeight, spacing, borderRadius, shadows } from '../../styles/theme';
@@ -57,8 +56,16 @@ export function NetworkSelectScreen({ navigation }: NetworkSelectScreenProps) {
         try {
             const result = await configureWiFi(selectedNetwork.ssid, password);
 
-            if (result.success && result.ip) {
-                setDeviceIp(result.ip);
+            // Check for success in multiple ways (ESP32 may return different formats)
+            const isSuccess = result.success ||
+                result.status === 'success' ||
+                result.status === 'ok' ||
+                (result.message && result.message.toLowerCase().includes('sucesso'));
+
+            if (isSuccess) {
+                if (result.ip) {
+                    setDeviceIp(result.ip);
+                }
                 setSelectedNetwork(null);
                 setPassword('');
                 navigation.navigate('RefillSetup');
@@ -123,60 +130,52 @@ export function NetworkSelectScreen({ navigation }: NetworkSelectScreenProps) {
                 <FlatList
                     data={networks}
                     renderItem={renderNetwork}
-                    keyExtractor={(item) => item.ssid}
+                    keyExtractor={(item, index) => `${item.ssid}-${index}`}
                     contentContainerStyle={styles.listContent}
                     showsVerticalScrollIndicator={false}
                 />
             )}
 
-            {/* Password Modal */}
-            <Modal
+            {/* Password Modal - Premium AnimatedModal */}
+            <AnimatedModal
                 visible={selectedNetwork !== null}
-                transparent
-                animationType="slide"
-                onRequestClose={() => setSelectedNetwork(null)}
+                onClose={() => {
+                    setSelectedNetwork(null);
+                    setPassword('');
+                }}
+                title="Conectar à Rede"
+                subtitle={selectedNetwork?.ssid}
             >
-                <View style={styles.modalOverlay}>
-                    <View style={styles.modalContent}>
-                        <View style={styles.modalHeader}>
-                            <View style={styles.modalHandle} />
-                        </View>
+                {selectedNetwork?.secure && (
+                    <Input
+                        label="Senha da Rede"
+                        placeholder="Digite a senha"
+                        value={password}
+                        onChangeText={setPassword}
+                        secureTextEntry
+                        icon={<Ionicons name="key" size={20} color={colors.textMuted} />}
+                    />
+                )}
 
-                        <Text style={styles.modalTitle}>Conectar à Rede</Text>
-                        <Text style={styles.modalSubtitle}>{selectedNetwork?.ssid}</Text>
-
-                        {selectedNetwork?.secure && (
-                            <Input
-                                label="Senha da Rede"
-                                placeholder="Digite a senha"
-                                value={password}
-                                onChangeText={setPassword}
-                                secureTextEntry
-                                icon={<Ionicons name="key" size={20} color={colors.textMuted} />}
-                            />
-                        )}
-
-                        <View style={styles.modalButtons}>
-                            <Button
-                                title="Cancelar"
-                                onPress={() => {
-                                    setSelectedNetwork(null);
-                                    setPassword('');
-                                }}
-                                variant="ghost"
-                                style={styles.cancelButton}
-                            />
-                            <Button
-                                title="Conectar"
-                                onPress={handleConnect}
-                                loading={connecting}
-                                disabled={selectedNetwork?.secure && !password}
-                                style={styles.connectButton}
-                            />
-                        </View>
-                    </View>
+                <View style={styles.modalButtons}>
+                    <Button
+                        title="Cancelar"
+                        onPress={() => {
+                            setSelectedNetwork(null);
+                            setPassword('');
+                        }}
+                        variant="ghost"
+                        style={styles.cancelButton}
+                    />
+                    <Button
+                        title="Conectar"
+                        onPress={handleConnect}
+                        loading={connecting}
+                        disabled={selectedNetwork?.secure && !password}
+                        style={styles.connectButton}
+                    />
                 </View>
-            </Modal>
+            </AnimatedModal>
         </View>
     );
 }
