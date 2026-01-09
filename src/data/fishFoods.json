@@ -1,0 +1,209 @@
+[
+  {
+    "id": "tetra-min-flakes",
+    "brand": "Tetra",
+    "name": "TetraMin Flakes",
+    "type": "flakes",
+    "description": "Ração em flocos para peixes tropicais",
+    "image": "https://m.media-amazon.com/images/I/81Zy+VVR5wL._AC_SL1500_.jpg",
+    "category": "tropical"
+  },
+  {
+    "id": "tetra-color-flakes",
+    "brand": "Tetra",
+    "name": "TetraColor Flakes",
+    "type": "flakes",
+    "description": "Flocos que realçam as cores naturais",
+    "image": "https://m.media-amazon.com/images/I/81nV7bVdMRL._AC_SL1500_.jpg",
+    "category": "tropical"
+  },
+  {
+    "id": "tetra-betta-flakes",
+    "brand": "Tetra",
+    "name": "Tetra Betta Flakes",
+    "type": "flakes",
+    "description": "Flocos especiais para Bettas",
+    "image": "https://m.media-amazon.com/images/I/81XN5F2YsJL._AC_SL1500_.jpg",
+    "category": "betta"
+  },
+  {
+    "id": "hikari-cichlid-gold",
+    "brand": "Hikari",
+    "name": "Cichlid Gold",
+    "type": "pellets",
+    "description": "Pellets flutuantes para ciclídeos",
+    "image": "https://m.media-amazon.com/images/I/71Y9r-GxiRL._AC_SL1200_.jpg",
+    "category": "cichlid"
+  },
+  {
+    "id": "hikari-micro-pellets",
+    "brand": "Hikari",
+    "name": "Micro Pellets",
+    "type": "pellets",
+    "description": "Micro pellets para peixes pequenos",
+    "image": "https://m.media-amazon.com/images/I/71lK9xI-+YL._AC_SL1300_.jpg",
+    "category": "tropical"
+  },
+  {
+    "id": "hikari-betta-bio-gold",
+    "brand": "Hikari",
+    "name": "Betta Bio-Gold",
+    "type": "pellets",
+    "description": "Pellets premium para Bettas",
+    "image": "https://m.media-amazon.com/images/I/71c6l7P+2JL._AC_SL1500_.jpg",
+    "category": "betta"
+  },
+  {
+    "id": "sera-vipan",
+    "brand": "Sera",
+    "name": "Sera Vipan",
+    "type": "flakes",
+    "description": "Alimento básico em flocos",
+    "image": "https://m.media-amazon.com/images/I/71hxL3N9T0L._AC_SL1500_.jpg",
+    "category": "tropical"
+  },
+  {
+    "id": "sera-granured",
+    "brand": "Sera",
+    "name": "Sera Granured",
+    "type": "granules",
+    "description": "Granulado para ciclídeos carnívoros",
+    "image": "https://m.media-amazon.com/images/I/61yY2y1pK4L._AC_SL1200_.jpg",
+    "category": "cichlid"
+  },
+  {
+    "id": "sera-goldy-gran",
+    "brand": "Sera",
+    "name": "Sera Goldy Gran",
+    "type": "granules",
+    "description": "Granulado para peixes dourados",
+    "image": "https://m.media-amazon.com/images/I/61xUW8XB6sL._AC_SL1200_.jpg",
+    "category": "goldfish"
+  },
+  {
+    "id": "api-tropical-flakes",
+    "brand": "API",
+    "name": "Tropical Flakes",
+    "type": "flakes",
+    "description": "Flocos para peixes tropicais",
+    "image": "https://m.media-amazon.com/images/I/81aV8sT7i2L._AC_SL1500_.jpg",
+    "category": "tropical"
+  },
+  {
+    "id": "api-goldfish-flakes",
+    "brand": "API",
+    "name": "Goldfish Flakes",
+    "type": "flakes",
+    "description": "Flocos para kinguios",
+    "image": "https://m.media-amazon.com/images/I/81e+Nff5YxL._AC_SL1500_.jpg",
+    "category": "goldfish"
+  },
+  {
+    "id": "omega-one-super-color",
+    "brand": "Omega One",
+    "name": "Super Color Flakes",
+    "type": "flakes",
+    "description": "Flocos com cores intensas naturais",
+    "image": "https://m.media-amazon.com/images/I/71cGaL+YPPL._AC_SL1200_.jpg",
+    "category": "tropical"
+  },
+  {
+    "id": "omega-one-betta-buffet",
+    "brand": "Omega One",
+    "name": "Betta Buffet Pellets",
+    "type": "pellets",
+    "description": "Pellets premium para Bettas",
+    "image": "https://m.media-amazon.com/images/I/71UY9H1ILRL._AC_SL1200_.jpg",
+    "category": "betta"
+  },
+  {
+    "id": "new-life-spectrum",
+    "brand": "New Life Spectrum",
+    "name": "Thera+A Regular",
+    "type": "pellets",
+    "description": "Pellets com alho natural",
+    "image": "https://m.media-amazon.com/images/I/71sPpvF+Y5L._AC_SL1200_.jpg",
+    "category": "tropical"
+  },
+  {
+    "id": "nls-cichlid-formula",
+    "brand": "New Life Spectrum",
+    "name": "Cichlid Formula",
+    "type": "pellets",
+    "description": "Fórmula especial para ciclídeos",
+    "image": "https://m.media-amazon.com/images/I/71+qWxptR8L._AC_SL1200_.jpg",
+    "category": "cichlid"
+  },
+  {
+    "id": "fluval-bug-bites-tropical",
+    "brand": "Fluval",
+    "name": "Bug Bites Tropical",
+    "type": "granules",
+    "description": "Grânulos com proteína de insetos",
+    "image": "https://m.media-amazon.com/images/I/71L0+LVzrSL._AC_SL1200_.jpg",
+    "category": "tropical"
+  },
+  {
+    "id": "fluval-bug-bites-betta",
+    "brand": "Fluval",
+    "name": "Bug Bites Betta",
+    "type": "granules",
+    "description": "Grânulos de insetos para Bettas",
+    "image": "https://m.media-amazon.com/images/I/71vAx5NnUJS._AC_SL1200_.jpg",
+    "category": "betta"
+  },
+  {
+    "id": "tropical-supervit",
+    "brand": "Tropical",
+    "name": "Supervit Flakes",
+    "type": "flakes",
+    "description": "Flocos multi-ingredientes premium",
+    "image": "https://m.media-amazon.com/images/I/71XaGpkvEHL._AC_SL1200_.jpg",
+    "category": "tropical"
+  },
+  {
+    "id": "alcon-colours",
+    "brand": "Alcon",
+    "name": "Alcon Colours",
+    "type": "flakes",
+    "description": "Flocos para realce de cores",
+    "image": "https://m.media-amazon.com/images/I/71DZF+Y2DkL._AC_SL1500_.jpg",
+    "category": "tropical"
+  },
+  {
+    "id": "alcon-basic",
+    "brand": "Alcon",
+    "name": "Alcon Basic",
+    "type": "flakes",
+    "description": "Ração básica em flocos",
+    "image": "https://m.media-amazon.com/images/I/71jhSsN3lGL._AC_SL1500_.jpg",
+    "category": "tropical"
+  },
+  {
+    "id": "poytara-mix",
+    "brand": "Poytara",
+    "name": "Poytara Mix",
+    "type": "flakes",
+    "description": "Mix de flocos para tropicais",
+    "image": "https://m.media-amazon.com/images/I/61K5sLU6HhL._AC_SL1024_.jpg",
+    "category": "tropical"
+  },
+  {
+    "id": "nutricon-mega-food",
+    "brand": "Nutricon",
+    "name": "Mega Food",
+    "type": "pellets",
+    "description": "Pellets para peixes de grande porte",
+    "image": "https://m.media-amazon.com/images/I/71qcqL4sVkL._AC_SL1500_.jpg",
+    "category": "large"
+  },
+  {
+    "id": "custom-food",
+    "brand": "Personalizado",
+    "name": "Ração Personalizada",
+    "type": "other",
+    "description": "Adicione sua própria ração",
+    "image": null,
+    "category": "other"
+  }
+]
